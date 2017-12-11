@@ -1,27 +1,16 @@
+# Load pickled data
 import pickle
 
 import numpy as np
 import sklearn
 from sklearn import preprocessing as skproc
 
-training_file = './data/train.p'
-validation_file = './data/valid.p'
+from data import load_pickles
 
-testing_file = './data/test.p'
-
-with open(training_file, mode='rb') as f:
-    train = pickle.load(f)
-with open(validation_file, mode='rb') as f:
-    valid = pickle.load(f)
-with open(testing_file, mode='rb') as f:
-    test = pickle.load(f)
-
-X_train, y_train = train['features'], train['labels']
-X_valid, y_valid = valid['features'], valid['labels']
-X_test, y_test = test['features'], test['labels']
-
-le = skproc.LabelEncoder()
-le.fit(y_train)
+datas = load_pickles()
+X_train, y_train = datas['X_train'], datas['y_train']
+X_valid, y_valid = datas['X_valid'], datas['y_valid']
+X_test, y_test = datas['X_test'], datas['y_test']
 
 ### Replace each question mark with the appropriate value.
 ### Use python, pandas or numpy methods rather than hard coding the results
@@ -36,9 +25,11 @@ n_validation = X_valid.shape[0]
 n_test = X_test.shape[0]
 
 # TODO: What's the shape of an traffic sign image?
-image_shape = X_train.shape[1:3]
+image_shape = X_train.shape[1:4]
 
 # TODO: How many unique classes/labels there are in the dataset.
+le = skproc.LabelEncoder()
+le.fit(y_train)
 n_classes = len(le.classes_)
 
 print("Number of training examples =", n_train)
@@ -55,48 +46,41 @@ datagen = ImageDataGenerator(
     # this normalizes the data
     featurewise_center=True,
     featurewise_std_normalization=True,
-    rotation_range=20,
+    rotation_range=10,
     width_shift_range=0.2,
     height_shift_range=0.2,
-    horizontal_flip=True)
+    horizontal_flip=True,
+    vertical_flip=True)
 
-datagen.fit(X_train)
+datagen.fit(X_train.astype('float32'))
 
 # model def
-from keras.applications.inception_v3 import InceptionV3
-from keras.models import Sequential
-from keras.layers import Dropout, Flatten, Dense
-from keras import optimizers
+import os
+import keras
+from model import get_model
 
-model = InceptionV3(include_top=False, weights='imagenet')
-print('Model loaded.')
+m = get_model(image_shape, n_classes)
 
-# build a classifier model to put on top of the convolutional model
-top_model = Sequential()
-top_model.add(Flatten(input_shape=model.output_shape[1:]))
-top_model.add(Dense(128, activation='relu'))
-top_model.add(Dropout(0.5))
-top_model.add(Dense(le.classes_, activation='softmax'))
+### Train your model here.
+### Calculate and report the accuracy on the training and validation set.
+### Once a final model architecture is selected,
+### the accuracy on the test set should be calculated and reported as well.
+### Feel free to use as many code cells as needed.
 
-top_model.load_weights('...')
+# fits the model on batches with real-time data augmentation:
+epochs = 240
 
-for layer in model.layers:
-    layer.trainable = False
-
-# add the model on top of the convolutional base
-model.add(top_model)
-
-# compile the model with a SGD/momentum optimizer
-# and a very slow learning rate.
-model.compile(
-    loss='categorical_crossentropy',
-    optimizer=optimizers.SGD(lr=1e-4, momentum=0.9),
-    metrics=['accuracy'])
-
-epochs = 20
-model.fit_generator(
+monitor = 'val_acc'
+callbacks = [
+    keras.callbacks.ModelCheckpoint(
+        os.path.join('./ckpts', 'chkpt.{epoch:05d}.{%s:.5f}.hdf5' % monitor),
+        mode='min',
+        monitor=monitor,
+        save_weights_only=True, )
+]
+m.fit_generator(
     datagen.flow(X_train, y_train, batch_size=32),
-    steps_per_epoch=len(X_train) / 32,
-    epochs=epochs)
-
-model.predict_on_batch()
+    samples_per_epoch=len(X_train),
+    validation_data=(X_test, y_test),
+    callbacks=callbacks,
+    nb_epoch=epochs)
