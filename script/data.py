@@ -1,24 +1,16 @@
 import os
+# Load pickled data
+import pickle
+import numpy as np
+import sklearn
+from sklearn import preprocessing as skproc
 
-EXTRA_DATA_ROOT = '../extra_data'
 
-
-def load_extra_files():
-    pass
-
-
-def get_top_k(pred, k=5, captions=None):
-    pass
+def rgb2gray(rgb):
+    return np.dot(rgb[..., :3], [0.299, 0.587, 0.114])
 
 
 def load_pickles():
-    # Load pickled data
-    import pickle
-    import numpy as np
-    import sklearn
-    from sklearn import preprocessing as skproc
-    # TODO: Fill this in based on where you saved the training and testing data
-
     training_file = './data/train.p'
     validation_file = './data/valid.p'
     testing_file = './data/test.p'
@@ -33,6 +25,10 @@ def load_pickles():
     X_train, y_train = train['features'], train['labels']
     X_valid, y_valid = valid['features'], valid['labels']
     X_test, y_test = test['features'], test['labels']
+
+    # X_train = rgb2gray(X_train)
+    # X_valid = rgb2gray(X_valid)
+    # X_test = rgb2gray(X_test)
 
     ### Replace each question mark with the appropriate value.
     ### Use python, pandas or numpy methods rather than hard coding the results
@@ -56,6 +52,7 @@ def load_pickles():
 
     print("Number of training examples =", n_train)
     print("Number of testing examples =", n_test)
+    print("Number of validation examples =", n_validation)
     print("Image data shape =", image_shape)
     print("Number of classes =", n_classes)
 
@@ -65,4 +62,5 @@ def load_pickles():
         X_valid=X_valid,
         y_valid=y_valid,
         X_test=X_test,
-        y_test=y_test, )
+        y_test=y_test,
+        n_classes=n_classes, )

@@ -3,6 +3,7 @@ import os
 import fire
 import numpy as np
 
+import keras.backend as K
 from model import get_model
 from data import load_pickles
 
@@ -13,18 +14,7 @@ def _get_m():
     return m
 
 
-def val():
-    datas = load_pickles()
-    X_valid, y_valid = datas['X_valid'], datas['y_valid']
-
-    m = _get_m()
-
-    res = m.predict_on_batch(X_valid)
-    res = np.argmax(res, axis=1)
-    print(np.mean(res == y_valid))
-
-
-def extra():
+def _extra_img():
     import os
     from scipy import misc
     EXTRA_IMG_DIR = './extra_data'
@@ -43,6 +33,23 @@ def extra():
     print('Shape::', X.shape)
     print('Shape::', y.shape)
 
+    return X, y
+
+
+def val():
+    datas = load_pickles()
+    X_valid, y_valid = datas['X_valid'], datas['y_valid']
+
+    m = _get_m()
+
+    res = m.predict_on_batch(X_valid)
+    res = np.argmax(res, axis=1)
+    print(np.mean(res == y_valid))
+
+
+def extra():
+    X, y = _extra_img()
+
     m = _get_m()
     res = m.predict_on_batch(X)
     top_k = np.argsort(-1. * res, axis=1)
@@ -56,6 +63,17 @@ def extra():
     print('Overall::', np.mean(ans == y))
     print('Ans::', ans)
     print('Oracle::', y)
+
+
+def viz(name):
+    m = _get_m()
+
+    layer = m.get_layer(name)
+
+    X, y = _extra_img()
+    f = K.function([m.get_input(train=False)], [layer.get_output(train=False)])
+
+    return f([X])
 
 
 if __name__ == '__main__':

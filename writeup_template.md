@@ -56,29 +56,34 @@ signs data set:
 
 Here is an exploratory visualization of the data set. It is a bar chart showing the distribution of the data
 
-![alt text][image1]
+![Train class dist](asset/train_dist.png)
+
+![Test class dist](asset/test_dist.png)
+
+![Validation class dist](asset/valid_dist.png)
+
+
+Sanity check on training inputs
+
+
+![Class speed limit 50km/h](asset/x_train1.png)
+![Class speed limit 80km/h](asset/x_train2.png)
+![Class right of way](asset/x_train3.png)
+
 
 ### Design and Test a Model Architecture
 
 #### 1. Describe how you preprocessed the image data. What techniques were chosen and why did you choose these techniques? Consider including images showing the output of each preprocessing technique. Pre-processing refers to techniques such as converting to grayscale, normalization, etc. (OPTIONAL: As described in the "Stand Out Suggestions" part of the rubric, if you generated additional data for training, describe why you decided to generate additional data, how you generated the data, and provide example images of the additional data. Then describe the characteristics of the augmented training set like number of images in the set, number of images for each class, etc.)
 
-As a first step, I decided to convert the images to grayscale because ...
+As a first step, I researched keras image processing module and decided to use it to use it as both normalization and augmentation tool.
 
-Here is an example of a traffic sign image before and after grayscaling.
+For data normalization, I enabled both `featurewise_center`, which makes the mean value of a single image 0 across 3 channels, and `featurewise_std_normalization`, which makes the standard deviation 1 for each image.
 
-![alt text][image2]
+For data augmentation, I enabled both horizontal and vertical flipping and weight and height shift with value of 0.5; augmentating datset in this way should make the model more robust to real world camera position and angle.
 
-As a last step, I normalized the image data because ...
-
-I decided to generate additional data because ...
-
-To add more data to the the data set, I used the following techniques because ...
-
-Here is an example of an original image and an augmented image:
+Few examples of the normalized and augmented image is shown below.
 
 ![alt text][image3]
-
-The difference between the original data set and the augmented data set is the following ...
 
 
 #### 2. Describe what your final model architecture looks like including model type, layers, layer sizes, connectivity, etc.) Consider including a diagram and/or table describing the final model.
