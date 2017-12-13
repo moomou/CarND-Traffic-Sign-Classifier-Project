@@ -4,8 +4,9 @@ import fire
 import numpy as np
 
 import keras.backend as K
+from skimage import exposure
 from model import get_model
-from data import load_pickles
+from data import load_pickles, generator, rgb2gray
 
 
 def _get_m():
@@ -24,9 +25,13 @@ def _extra_img():
     test_y = []
     for img in os.listdir(EXTRA_IMG_DIR):
         test_y.append(int(img[:-4]))
-        img = misc.imread(os.path.join(EXTRA_IMG_DIR, img))
+        img = misc.imread(os.path.join(EXTRA_IMG_DIR, img), mode='RGB')
         img = misc.imresize(img, (32, 32, 3))
-        test_imgs.append(img[:, :, :3])
+        img = rgb2gray(np.array([img]))[0]
+        img = (img - 128) / 128
+        img = exposure.equalize_hist(img)
+
+        test_imgs.append(img)
 
     X = np.array(test_imgs)
     y = np.array(test_y)
@@ -38,13 +43,16 @@ def _extra_img():
 
 def val():
     datas = load_pickles()
-    X_valid, y_valid = datas['X_valid'], datas['y_valid']
+    X_test, y_test = datas['X_test'], datas['y_test']
+
+    test_gen = generator(
+        X_test, y_test, batch_size=30, aug=False, shuffle=False)
 
     m = _get_m()
 
-    res = m.predict_on_batch(X_valid)
+    res = m.predict_generator(test_gen, steps=(X_test.shape[0] // 30))
     res = np.argmax(res, axis=1)
-    print(np.mean(res == y_valid))
+    print(np.mean(res == y_test))
 
 
 def extra():

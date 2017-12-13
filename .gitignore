@@ -6,3 +6,4 @@ models
 *.p
 ckpts/
 __pycache__
+log_dir
