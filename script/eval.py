@@ -1,10 +1,10 @@
 import os
 
-import fire
 import numpy as np
 
 import keras.backend as K
 from skimage import exposure
+
 from model import get_model
 from data import load_pickles, generator, rgb2gray
 
@@ -79,9 +79,9 @@ def viz(name):
     layer = m.get_layer(name)
 
     X, y = _extra_img()
-    f = K.function([m.get_input(train=False)], [layer.get_output(train=False)])
+    f = K.function([m.input], [layer.output])
 
-    return f([X])
+    np.save('./viz.bin', f([X])[0], allow_pickle=False)
 
 
 if __name__ == '__main__':
